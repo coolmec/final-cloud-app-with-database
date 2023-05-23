@@ -3,10 +3,11 @@ from django.utils.timezone import now
 try:
     from django.db import models
 except Exception:
-    print("There was an error loading django modules. Do you have django installed?")
+    print("there was an error loading django modules. Do you have django installed?")
     sys.exit()
 
 from django.conf import settings
+import uuid
 import uuid
 
 
@@ -64,8 +65,7 @@ class Course(models.Model):
     is_enrolled = False
 
     def __str__(self):
-        return "Name: " + self.name + "," + \
-               "Description: " + self.description
+        return "Name: " + self.name
 
 
 # Lesson model
@@ -74,6 +74,9 @@ class Lesson(models.Model):
     order = models.IntegerField(default=0)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     content = models.TextField()
+
+    def __str__(self):
+        return "Title: " + self.title
 
 
 # Enrollment model
@@ -105,7 +108,7 @@ class Question(models.Model):
     # Foreign key to lesson
     lesson = models.ForeignKey(Lesson, null=False, on_delete=models.CASCADE)
     # question text
-    question_text = models.TextField(null=False)
+    question_text = models.CharField(null=False, max_length=250)
     # question grade/mark
     question_grade = models.IntegerField(null=False)
 
@@ -117,6 +120,9 @@ class Question(models.Model):
            return True
        else:
            return False
+    
+    def __str__(self):
+        return self.question_text
 
 
 #  <HINT> Create a Choice Model with:
@@ -129,9 +135,12 @@ class Choice(models.Model):
     # Foreign key to lesson
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     # Choice text or content
-    choice_content = models.TextField(null=False)
+    choice_content = models.CharField(null=False, max_length=250)
     # Indicate if this choice of the question is a correct one or not
-    is_correct = models.BooleanField
+    is_correct = models.BooleanField(null=False)
+
+    def __str__(self):
+        return self.choice_content
 
 # <HINT> The submission model
 # One enrollment could have multiple submission
@@ -140,4 +149,5 @@ class Choice(models.Model):
 class Submission(models.Model):
     enrollment = models.ForeignKey(Enrollment, on_delete=models.CASCADE)
     choices = models.ManyToManyField(Choice)
+
 #    Other fields and methods you would like to design
