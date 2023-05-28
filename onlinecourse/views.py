@@ -111,15 +111,15 @@ def enroll(request, course_id):
          # Add each selected choice object to the submission object
          # Redirect to show_exam_result with the submission id
 def submit(request, course_id):
-    course = Course.get_object_or_404(Course, pk=course_id)
+    course = Course.objects.get(pk=course_id)
     user = request.user
-    enrollment = Enrollment.get_object_or_404(Enrollment, course=course, user=user)
+    enrollment = get_object_or_404(Enrollment, course=course, user=user)
     submission = Submission.objects.create(enrollment=enrollment)
     choice_ids = extract_answers(request)
     for one_id in choice_ids:
         choice = Choice.objects.get(pk=one_id)
         submission.choices.add(choice)
-    return HttpResponseRedirect(reverse(viewname='onlinecourse:show_exam_result', args=(course_id, submission.id,)))
+    return HttpResponseRedirect(reverse(viewname='onlinecourse:result', args=(course_id, submission.id,)))
 
 
 
@@ -128,7 +128,7 @@ def extract_answers(request):
    submitted_anwsers = []
    for key in request.POST:
        if key.startswith('choice'):
-           value = request.POST[key]
+           value = key[7:]
            choice_id = int(value)
            submitted_anwsers.append(choice_id)
    return submitted_anwsers
@@ -145,12 +145,12 @@ def show_exam_result(request, course_id, submission_id):
     exam_grade = 0
     course = Course.objects.get(pk=course_id)
     submission = Submission.objects.get(pk=submission_id)
-    for choice in submission.choices:
+    for choice in submission.choices.all():
         selected_ids.append(choice.id)
     questions = course.question_set.all()
     for q in questions:
         if q.is_get_score(selected_ids):
-            exam_grade+=q.grade
+            exam_grade+=q.question_grade
     context = {'selected_ids':selected_ids, 'course':course, 'grade':exam_grade}
     return render(request, 'onlinecourse/exam_result_bootstrap.html', context)
 
